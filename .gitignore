@@ -1,0 +1,8 @@
+
+.ipynb_checkpoints
+data/
+dax/
+.DS_Store
+.vscode/
+__pycache__
+shell/test*
