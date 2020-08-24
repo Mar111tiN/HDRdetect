@@ -80,3 +80,4 @@ BEGIN {
       }
     }
     printf("%s\n",Data[FIELDS[fieldCount]]);
+}'
