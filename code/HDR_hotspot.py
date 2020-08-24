@@ -10,6 +10,8 @@ from script_utils import show_command, show_output
 from time import sleep
 
 # ############ FILTER_BAM UTILS ########################################################
+
+
 def reduce_regions(df, padding):
     '''
     takes a mutation list and returns a region list using padding
@@ -27,7 +29,7 @@ def reduce_regions(df, padding):
     df['gap'] = df['gap'].cumsum()
     # groupby the coverage break group and condense individual coverage islands
     # agg has to contain the neccessary shared columns TransLength because it is needed for coverage computation
-    df = df.groupby('gap').agg({'Chr':'first','Start': 'min', 'End':'max'})
+    df = df.groupby('gap').agg({'Chr': 'first', 'Start': 'min', 'End': 'max'})
     return df.reset_index('gap').drop(columns='gap')
 
 
@@ -41,7 +43,8 @@ def mut2bed(mut_df, chrom, padding, output):
         mut_df.to_csv(output, index=False, sep='\t', header=False)
         return output
     # get the bedfile with padded and collapsed regions
-    bed_df = reduce_regions(mut_df.sort_values(['Chr', 'Start']).iloc[:,:5], padding)
+    bed_df = reduce_regions(mut_df.sort_values(
+        ['Chr', 'Start']).iloc[:, :5], padding)
 
     # write bed_df to file
     bed_df.to_csv(output, index=False, sep='\t', header=False)
@@ -53,21 +56,23 @@ def bam2hotspot(bam_file, chrom, HDR_config, mut_df):
 
     # unwrap the mawk tools
     min_Alt = HDR_config['minAltSum']
-    pile2hotspot= HDR_config['pile2hotspot']
-    
+    pile2hotspot = HDR_config['pile2hotspot']
+
     # assign bedfile name
     proc = f".{os.getpid()}" if HDR_config['multi'] else ""
     bed_file = bam_file.replace(".bam", f".{chrom}{proc}.bed")
 
     # create the bedfile for the mpileup command
-    bed_file = mut2bed(mut_df, chrom, padding=HDR_config['PAD'], output=bed_file)
+    bed_file = mut2bed(
+        mut_df, chrom, padding=HDR_config['PAD'], output=bed_file)
     print(bed_file, os.path.isfile(bed_file))
     sleep(2)
-    pileup_cmd = f"samtools mpileup -l {bed_file} -f {chrom_seq} -q {HDR_config['MINq']} -Q {HDR_config['MINQ']} {bam_file}" 
-    
+    pileup_cmd = f"samtools mpileup -l {bed_file} -f {chrom_seq} -q {HDR_config['MINq']} -Q {HDR_config['MINQ']} {bam_file}"
+
     cmd = f"{pileup_cmd} | {pile2hotspot} {min_Alt}"
     show_command(cmd)
-    hotspot_df = pd.read_csv(StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode('utf-8')), sep='\t')
+    hotspot_df = pd.read_csv(StringIO(
+        run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode('utf-8')), sep='\t')
     run(f"rm {bed_file}", shell=True)
     return hotspot_df
 
@@ -80,29 +85,31 @@ def bam2hotspot_multi(bam_file, chrom, HDR_config, mut_df, threads):
     show_output(f"Using {threads} cores for hotspot detection on {chrom}")
     hot_pool = Pool(threads)
     # split
-    # minimal length of 10 mutations
-    MINLEN = 2
+    # minimal length of 10 mutations per thread
+    MINLEN = 10
     split_factor = min(math.ceil(len(mut_df.index) / MINLEN), threads)
     mut_split = np.array_split(mut_df, split_factor)
     # apply
     HDR_config['multi'] = True
-    hot_dfs = hot_pool.map(partial(bam2hotspot, bam_file, chrom, HDR_config), mut_split)
+    hot_dfs = hot_pool.map(
+        partial(bam2hotspot, bam_file, chrom, HDR_config), mut_split)
     hot_pool.close()
     hot_pool.terminate()
     hot_pool.join()
     # concat and return
-    # there is a chance for overlapping 
+    # there is a chance for overlapping
     hot_df = pd.concat(hot_dfs).drop_duplicates()
     return hot_df
 
 
 def pileup2hotspot(mut_df, pileup_file, chrom, HDR_config):
     # unwrap the mawk tool
-    pile2hotspot= HDR_config['pile2hotspot_chrom']
+    pile2hotspot = HDR_config['pile2hotspot_chrom']
     min_Alt = HDR_config['minAltSum']
     cmd = f"cat {pileup_file} | {pile2hotspot} {chrom} {min_Alt}"
     show_command(cmd)
-    hotspot_df = pd.read_csv(StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode('utf-8')), sep='\t')
+    hotspot_df = pd.read_csv(StringIO(
+        run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode('utf-8')), sep='\t')
     return hotspot_df
 
 
@@ -140,6 +147,7 @@ def filter_hotspots(pileup_df, HDR_config):
     hotspot_df = pileup_df.query(
         '(AltSum >= @minAlt) and (@minRatio <= AltRatio <= @maxRatio)')
     return hotspot_df
+
 
 def get_hotspot_df(pileup_file, HDR_config):
     '''

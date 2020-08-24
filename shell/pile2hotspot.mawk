@@ -1,7 +1,9 @@
 #!/bin/sh
 
-# specialized bamcsv converter for HDRtools
-# use samtools | bam2csv | editbam
+# specialized converter for HDRtools
+# use samtools mpileup -f ! bam | pile2hotspot [MinALT=3]
+# takes pileup data from stream and outputs mutations with
+# ..with a minimum occurrence of MinAlt
  
 mawk '
 # get the MAPQ as argument with default 20
