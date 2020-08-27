@@ -56,6 +56,7 @@ def bam2hotspot(bam_file, chrom, HDR_config, mut_df):
 
     # unwrap the mawk tools
     min_Alt = HDR_config['minAltSum']
+    maxAltRatio = HDR_config['maxAltRatio']
     pile2hotspot = HDR_config['pile2hotspot']
 
     # assign bedfile name
@@ -69,7 +70,7 @@ def bam2hotspot(bam_file, chrom, HDR_config, mut_df):
     sleep(2)
     pileup_cmd = f"samtools mpileup -l {bed_file} -f {chrom_seq} -q {HDR_config['MINq']} -Q {HDR_config['MINQ']} {bam_file}"
 
-    cmd = f"{pileup_cmd} | {pile2hotspot} {min_Alt}"
+    cmd = f"{pileup_cmd} | {pile2hotspot} {min_Alt} {maxAltRatio}"
     show_command(cmd)
     hotspot_df = pd.read_csv(StringIO(
         run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode('utf-8')), sep='\t')
@@ -106,7 +107,8 @@ def pileup2hotspot(mut_df, pileup_file, chrom, HDR_config):
     # unwrap the mawk tool
     pile2hotspot = HDR_config['pile2hotspot_chrom']
     min_Alt = HDR_config['minAltSum']
-    cmd = f"cat {pileup_file} | {pile2hotspot} {chrom} {min_Alt}"
+    maxAltRatio = HDR_config['maxAltRatio']
+    cmd = f"cat {pileup_file} | {pile2hotspot} {chrom} {min_Alt} {maxAltRatio}"
     show_command(cmd)
     hotspot_df = pd.read_csv(StringIO(
         run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode('utf-8')), sep='\t')

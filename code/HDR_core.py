@@ -83,4 +83,3 @@ def get_HDR_multi(filter_HDR, bam_file, hotspot_df, threads,
     hdr_pool.join()
     # concat and return
     return pd.concat(HDR_dfs, sort=True)
-

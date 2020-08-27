@@ -9,6 +9,7 @@ mawk '
 # get the MAPQ as argument with default 20
 BEGIN {
     MinAlt = "'${1:-3}'" + 0;
+    maxAltRatio = "'${2:-0.9}'" + 0.0;
     hCols="Chr,Pos,Ref,Depth,Alt,AltSum,AltRatio,totalAlt";
     hColsCount = split(hCols,HCOLS,",");
     for (col = 0; col++ < hColsCount-1;) {
@@ -39,13 +40,13 @@ $5 ~ /[AaCcGgTt]/ {
             maxLetter = substr(LETTERS[l],1,1);
         }
     }
+    altRatio=maxCount/$4;
     # OUTPUT only above a minimum of MinAlt mutations #########
-    if (totalAlt >= MinAlt) {
+    if ((totalAlt >= MinAlt) && (altRatio <= maxAltRatio)) {
         # print base columns
         for (l=0;l++<4;) {
             printf("%s\t", $l);
         }
-        altRatio=maxCount/$4;
         printf("%s\t%s\t%s\t%s\n",maxLetter,maxCount,altRatio,totalAlt);
     }
 }'

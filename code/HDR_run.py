@@ -67,7 +67,7 @@ def HDR_run(mut_df, mut_file, bam_file, chrom, threads, HDR_config, pileup_file)
     # restrict mut_df to chrom
     mut_df = mut_df.query('Chr == @chrom')
 
-    ############ FIND HOTSPOTS ###########################
+    # ########### FIND HOTSPOTS ###########################
     if pileup_file:
         source = pileup_file
         hotspot_df = pileup2hotspot(
@@ -87,8 +87,8 @@ def HDR_run(mut_df, mut_file, bam_file, chrom, threads, HDR_config, pileup_file)
 
     show_output(
         f"Detected {hotspot_len} putative HDR lanes in {source}.")
-
-    ############ FILTER HOTSPOTS ###########################
+    print(hotspot_df[:39])
+    # ########### FILTER HOTSPOTS ###########################
     filter_HDR = get_filter_hdr_multi(mut_df, hotspot_df, threads, HDR_config)
     filter_HDR_len = len(filter_HDR.index)
 
