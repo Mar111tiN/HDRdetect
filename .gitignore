@@ -1,5 +1,5 @@
-
-.ipynb_checkpoints
+.DS_Store
+.ipynb_checkpoints/
 data/
 dax/
 .DS_Store
