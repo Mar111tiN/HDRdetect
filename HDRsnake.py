@@ -9,7 +9,7 @@ def main(s):
 
     w = s.wildcards
     i = s.input
-    o = o.output
+    o = s.output
     p = s.params
     c = s.config
     cc = c["HDR"]
@@ -22,7 +22,7 @@ def main(s):
         '''
         # get the script directory as snakemake attribute, climb up with dirname
         # scriptdir is in code
-        ### shell_path = os.path.join(os.path.dirname(s.scriptdir), shell_path'
+        # ## shell_path = os.path.join(os.path.dirname(s.scriptdir), shell_path'
         shell_path = os.path.join(s.scriptdir, shell_path
         print(f"Using HDR shell path: {shell_path}")
         def mawk(tool_name)
