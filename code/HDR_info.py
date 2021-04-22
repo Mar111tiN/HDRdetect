@@ -1,6 +1,7 @@
 import pandas as pd
 from script_utils import show_output
 
+
 def get_base(read, mut_row, min_q=25):
     '''
     get bases at row position
@@ -41,7 +42,7 @@ def get_adjacent_HDR2(mut_row, hotspot_df, padding=150):
     '''
     get the adjacent HDR-lanes for each mutation as a HDR_df dataframe for further computation
     '''
-    
+
     chrom = mut_row['Chr']
     mut_pos = mut_row['Start']
     HDR_df = hotspot_df.query(
@@ -55,7 +56,7 @@ def get_adjacent_HDR2(mut_row, hotspot_df, padding=150):
 def get_HDR_count(row, df, padding=100):
     HDR_lanes = get_adjacent_HDR2(row, df, padding=padding)
     return len(HDR_lanes.index)
-    
+
 
 def get_intersect_bam(HDR_row, mut_bam, min_q=25):
     '''
@@ -71,7 +72,7 @@ def get_intersect_bam(HDR_row, mut_bam, min_q=25):
     # reduce intersect_bam to the reads above threshold quality at that position
     intersect_bam = intersect_bam.query('mutAlt != -1 and HDRAlt != -1')
     return intersect_bam
-    
+
 
 def compute_similarity(HDR_row, cover_bam, min_q=25):
     '''
@@ -95,7 +96,7 @@ def compute_similarity(HDR_row, cover_bam, min_q=25):
     result = pd.Series([round(ref_sim / ref_support, 2), ref_support, round(alt_sim / alt_support, 2),
                         alt_support, support], index=['RefSim', 'RefSupport', 'AltSim', 'AltSupport', 'support'])
     return result
-    
+
 
 def concat(row):
     ref_support = int(row['RefSupport'])
@@ -124,7 +125,7 @@ def condense_HDR_info(HDR_df, MinSim=0.9, MinAltSupport=13):
     count = HDR_select['info'].count()
     info = HDR_select['info'].str.cat(sep=' | ')
     return pd.Series([count, info], index=['HDRcount', 'HDRinfo'])
-    
+
 
 def get_HDR_info(mut_row, hotspot_df, bam_df, HDR_config):
     '''

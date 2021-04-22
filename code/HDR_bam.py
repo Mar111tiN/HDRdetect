@@ -1,6 +1,6 @@
-from io import StringIO
-from subprocess import Popen, PIPE, run
+import os
 import pandas as pd
+from script_utils import cmd2df
 
 
 def bam2df2(
@@ -15,8 +15,9 @@ def bam2df2(
     set the region requires 3 threads
     """
 
-    bam2csv = HDR_config["mawk"]("bam2csv")
-    editbam = HDR_config["mawk"]("editbam")
+    # unwrap the mawk tools using mawk tool unwrapper
+    def mawk(tool):
+        return os.path.join(HDR_config["mawk_path"], f"{tool}.mawk")
 
     if region:
         mut_pos = region
@@ -28,11 +29,8 @@ def bam2df2(
     else:
         mut_pos = ""
     cmd = (
-        f"{tool} view {bam_file} {mut_pos} | {bam2csv} | {editbam} {HDR_config['MINq']}"
+        f"{tool} view {bam_file} {mut_pos} | {mawk('bam2csv')} | {mawk('editbam')} {HDR_config['MINq']}"
     )
     # show_command(cmd)
-    bam_df = pd.read_csv(
-        StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode("utf-8")),
-        sep="\t",
-    )
+    bam_df = cmd2df(cmd, show=True)
     return bam_df

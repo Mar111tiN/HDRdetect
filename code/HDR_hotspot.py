@@ -3,10 +3,9 @@ import pandas as pd
 from multiprocessing import Pool
 import numpy as np
 import math
-from io import StringIO
 from functools import partial
-from subprocess import Popen, PIPE, run
-from script_utils import show_command, show_output
+from subprocess import run
+from script_utils import show_command, show_output, cmd2df
 from time import sleep
 
 # ############ FILTER_BAM UTILS ########################################################
@@ -56,8 +55,9 @@ def bam2hotspot(bam_file, chrom, HDR_config, mut_df):
     min_Alt = HDR_config["minAltSum"]
     maxAltRatio = HDR_config["AltRatio"][1]
 
-    # unwrap the mawk tools using mawk()
-    pile2hotspot = HDR_config["mawk"]("pile2hotspot")
+    # unwrap the mawk tools using mawk tool unwrapper
+    def mawk(tool):
+        return os.path.join(HDR_config["mawk_path"], f"{tool}.mawk")
 
     # assign bedfile name
     proc = f".{os.getpid()}" if HDR_config["multi"] else ""
@@ -65,21 +65,27 @@ def bam2hotspot(bam_file, chrom, HDR_config, mut_df):
 
     # create the bedfile for the mpileup command
     bed_file = mut2bed(mut_df, chrom, padding=HDR_config["PAD"], output=bed_file)
+
+    ########
     print(bed_file, os.path.isfile(bed_file))
-    sleep(2)
+    sleep(2)  # what for?
+    #########
+
     pileup_cmd = f"samtools mpileup -l {bed_file} -f {chrom_seq} -q {HDR_config['MINq']} -Q {HDR_config['MINQ']} {bam_file}"
 
-    cmd = f"{pileup_cmd} | {pile2hotspot} {min_Alt} {maxAltRatio}"
-    show_command(cmd)
-    hotspot_df = pd.read_csv(
-        StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode("utf-8")),
-        sep="\t",
-    )
+    cmd = f"{pileup_cmd} | {mawk('cleanpileup')} | {mawk('pile2hotspot')} {min_Alt} {maxAltRatio}"
+
+    hotspot_df = cmd2df(cmd, show=True, multi=True)
+
     run(f"rm {bed_file}", shell=True)
     return hotspot_df
 
 
 def bam2hotspot_multi(bam_file, chrom, HDR_config, mut_df, threads):
+    '''
+    running bam2hotspot on multithread
+    '''
+
     # compute true HDRs using multicores
     # MULTITHREADING
     # use half the threads because 2 processes are required for bam2hotspot
@@ -104,16 +110,18 @@ def bam2hotspot_multi(bam_file, chrom, HDR_config, mut_df, threads):
 
 
 def pileup2hotspot(mut_df, pileup_file, chrom, HDR_config):
-    # unwrap the mawk tool
-    pile2hotspot = HDR_config["mawk"]("pile2hotspot_chrom")
+    '''
+    alternate tool if stream is coming from pileup
+    '''
+    # unwrap the mawk tools using mawk tool unwrapper
+    def mawk(tool):
+        return os.path.join(HDR_config["mawk_path"], f"{tool}.mawk")
+
     min_Alt = HDR_config["minAltSum"]
     maxAltRatio = HDR_config["AltRatio"][1]
-    cmd = f"cat {pileup_file} | {pile2hotspot} {chrom} {min_Alt} {maxAltRatio}"
-    show_command(cmd)
-    hotspot_df = pd.read_csv(
-        StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode("utf-8")),
-        sep="\t",
-    )
+    cmd = f"cat {pileup_file} | {mawk('cleanpileup')} | {mawk('pile2hotspot')} {chrom} {min_Alt} {maxAltRatio}"
+
+    hotspot_df =  = cmd2df(cmd, show=True, multi=True)
     return hotspot_df
 
 

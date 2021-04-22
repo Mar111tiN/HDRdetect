@@ -18,7 +18,7 @@ COLS = [
 
 
 def HDR_master(
-    mut_file, bam_file, out_file, chrom, threads, HDR_config, pileup_file=""
+    mut_file, bam_file, chrom, threads, HDR_config, pileup_file=""
 ):
     """
     collects the imput and
@@ -67,13 +67,6 @@ def HDR_master(
 
         HDR_df = pd.concat(HDR_dfs).sort_values("Chr")
 
-    # write to output
-    HDR_df.to_csv(out_file, sep="\t", index=False)
-    show_output(
-        f"HDRdetect of {bam_file} finished. Writing results to {out_file}",
-        time=True,
-        color="success",
-    )
     return HDR_df
 
 
@@ -105,7 +98,7 @@ def HDR_run(mut_df, bam_file, chrom, threads, HDR_config, pileup_file):
         return pd.DataFrame(columns=COLS)
 
     show_output(f"Detected {hotspot_len} putative HDR lanes in {source}.")
-    print(hotspot_df[:39])
+
     # ########### FILTER HOTSPOTS ###########################
     filter_HDR = get_filter_hdr_multi(mut_df, hotspot_df, threads, HDR_config)
     filter_HDR_len = len(filter_HDR.index)
