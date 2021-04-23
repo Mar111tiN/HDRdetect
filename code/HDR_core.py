@@ -1,11 +1,9 @@
 import pandas as pd
-from script_utils import show_output, show_command
+from script_utils_HDR import show_output
 from multiprocessing import Pool
 import numpy as np
 import math
 from functools import partial
-from io import StringIO
-from subprocess import PIPE, run
 from HDR_bam import bam2df2
 from HDR_info import get_HDR_info, get_HDR_count
 

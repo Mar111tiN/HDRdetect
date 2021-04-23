@@ -1,5 +1,5 @@
 import pandas as pd
-from script_utils import show_output
+from script_utils_HDR import show_output
 
 
 def get_base(read, mut_row, min_q=25):
@@ -43,7 +43,6 @@ def get_adjacent_HDR2(mut_row, hotspot_df, padding=150):
     get the adjacent HDR-lanes for each mutation as a HDR_df dataframe for further computation
     '''
 
-    chrom = mut_row['Chr']
     mut_pos = mut_row['Start']
     HDR_df = hotspot_df.query(
         '(@mut_pos - @padding < Pos < @mut_pos + @padding)')
@@ -62,6 +61,7 @@ def get_intersect_bam(HDR_row, mut_bam, min_q=25):
     '''
     get the reads covering both the mutation and the specific HDR_lane --> intersect_bam
     '''
+    
     pos = HDR_row['Start']
     intersect_bam = mut_bam.query('Pos < @pos < Pos + read_len - Soft_start')
     # prevent key error in next step

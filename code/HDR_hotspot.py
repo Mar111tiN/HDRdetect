@@ -5,7 +5,7 @@ import numpy as np
 import math
 from functools import partial
 from subprocess import run
-from script_utils import show_command, show_output, cmd2df
+from script_utils_HDR import show_command, show_output, cmd2df
 from time import sleep
 
 # ############ FILTER_BAM UTILS ########################################################
@@ -72,8 +72,8 @@ def bam2hotspot(bam_file, chrom, HDR_config, mut_df):
     #########
 
     pileup_cmd = f"samtools mpileup -l {bed_file} -f {chrom_seq} -q {HDR_config['MINq']} -Q {HDR_config['MINQ']} {bam_file}"
-
-    cmd = f"{pileup_cmd} | {mawk('cleanpileup')} | {mawk('pile2hotspot')} {min_Alt} {maxAltRatio}"
+    # cleanpileup needs the -d Flag to output depth
+    cmd = f"{pileup_cmd} | {mawk('cleanpileup')} -d | {mawk('pile2hotspot')} {min_Alt} {maxAltRatio}"
 
     hotspot_df = cmd2df(cmd, show=True, multi=True)
 
@@ -119,9 +119,10 @@ def pileup2hotspot(mut_df, pileup_file, chrom, HDR_config):
 
     min_Alt = HDR_config["minAltSum"]
     maxAltRatio = HDR_config["AltRatio"][1]
-    cmd = f"cat {pileup_file} | {mawk('cleanpileup')} | {mawk('pile2hotspot')} {chrom} {min_Alt} {maxAltRatio}"
+    # cleanpileup needs the -d Flag to output depth
+    cmd = f"cat {pileup_file} | {mawk('cleanpileup')} -d | {mawk('pile2hotspot_chrom')} {chrom} {min_Alt} {maxAltRatio}"
 
-    hotspot_df =  = cmd2df(cmd, show=True, multi=True)
+    hotspot_df = cmd2df(cmd, show=True, multi=True)
     return hotspot_df
 
 

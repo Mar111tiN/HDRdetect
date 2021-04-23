@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-from script_utils import cmd2df
+import sys
+from script_utils_HDR import cmd2df
 
 
 def bam2df2(
@@ -32,5 +33,5 @@ def bam2df2(
         f"{tool} view {bam_file} {mut_pos} | {mawk('bam2csv')} | {mawk('editbam')} {HDR_config['MINq']}"
     )
     # show_command(cmd)
-    bam_df = cmd2df(cmd, show=True)
+    bam_df = cmd2df(cmd, show=False)
     return bam_df
