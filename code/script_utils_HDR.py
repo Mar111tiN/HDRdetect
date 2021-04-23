@@ -11,13 +11,14 @@ ansii_colors = {
     "red": "[1;31;1m",
     "cyan": "[1;36;1m",
     "gray": "[1;30;1m",
+    "orange": "[1;33;1m",
     "black": "[0m",
 }
 
 colors = {
     "process": ansii_colors["green"],
     "time": ansii_colors["magenta"],
-    "normal": ansii_colors["gray"],
+    "normal": ansii_colors["orange"],
     "warning": ansii_colors["red"],
     "success": ansii_colors["cyan"],
 }
@@ -65,8 +66,18 @@ def cmd2df(cmd, show=False, **kwargs):
 
     if show:
         show_command(cmd, **kwargs)
-    cmd_df = pd.read_csv(
-        StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode("utf-8")),
-        sep="\t",
-    )
+    
+    # certain parsings (eg. bam_csvs) fail because of erroneous quoting in Qual fields
+    try:
+        cmd_df = pd.read_csv(
+            StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode("utf-8")),
+            sep="\t"
+        )
+    except:
+        show_output(f"Parsing error in cmd:<{cmd}> falling back to non-quoting", color="warning")
+        cmd_df = pd.read_csv(
+            StringIO(run(cmd, stdout=PIPE, check=True, shell=True).stdout.decode("utf-8")),
+            sep="\t",
+            quoting=3
+        )
     return cmd_df
