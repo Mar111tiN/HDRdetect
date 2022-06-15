@@ -6,3 +6,4 @@ dax/
 .vscode/
 __pycache__
 shell/test*
+code/__pycache__/**
