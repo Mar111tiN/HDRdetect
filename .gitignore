@@ -4,6 +4,6 @@ data/
 dax/
 .DS_Store
 .vscode/
-__pycache__
+__pycache__/
 shell/test*
 code/__pycache__/**
